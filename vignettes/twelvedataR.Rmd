@@ -1,0 +1,180 @@
+---
+title: "Getting started with twelvedataR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with twelvedataR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+# The examples need an API key and an internet connection.
+# When no key is available (e.g. on CRAN or on a CI run without the
+# secret) the code is shown but not executed, so the vignette still builds.
+has_key <- nzchar(Sys.getenv("TWELVEDATA_API_KEY"))
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = has_key,
+  fig.width = 7,
+  fig.height = 4
+)
+```
+
+```{r, echo = FALSE, results = "asis", eval = !has_key}
+cat("> **Note:** no `TWELVEDATA_API_KEY` was found when this vignette was",
+    "built, so the code below is shown without output.\n")
+```
+
+## Introduction
+
+[Twelve Data](https://twelvedata.com) is a financial market data provider
+with a REST API that covers stocks, ETFs, forex and cryptocurrencies.
+**twelvedataR** is a small R interface to this API. It handles the HTTP
+requests, checks your inputs before anything is sent, turns the JSON
+answers into ordinary data frames and gives clear error messages.
+
+The package exports two functions:
+
+| Function            | What it returns                                  |
+|---------------------|--------------------------------------------------|
+| `get_time_series()` | Historical prices (open, high, low, close, volume) |
+| `get_quote()`       | The latest quote for one symbol                   |
+
+## Installation
+
+```{r, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("Tvths/twelvedataR")
+```
+
+## Setting up your API key
+
+1. Create a free account at <https://twelvedata.com> and copy your API key.
+2. Open your `.Renviron` file:
+
+```{r, eval = FALSE}
+usethis::edit_r_environ()
+```
+
+3. Add the line below, save the file and restart R:
+
+```
+TWELVEDATA_API_KEY=your_key_here
+```
+
+The package reads the key with `Sys.getenv()`, so it is never written in
+your scripts and never ends up on GitHub. If the key is missing, every
+function stops with a message telling you how to fix it.
+
+**Rate limits.** The free plan allows about 8 requests per minute and 800
+per day. Each call to `get_time_series()` or `get_quote()` uses one
+request. If you hit the limit (HTTP 429) the package waits and retries
+automatically up to three times.
+
+```{r setup, eval = TRUE}
+library(twelvedataR)
+```
+
+## Historical prices with `get_time_series()`
+
+The most common use is to download daily prices for a stock:
+
+```{r}
+aapl <- get_time_series("AAPL", interval = "1day", outputsize = 100)
+head(aapl)
+str(aapl)
+```
+
+The result is a plain `data.frame`, sorted from oldest to newest, with
+numeric price columns and a `datetime` column in UTC. That makes it easy to
+use directly with base R or any other package.
+
+### Plotting the closing price
+
+```{r}
+plot(aapl$datetime, aapl$close, type = "l",
+     main = "Apple (AAPL) - daily closing price",
+     xlab = "", ylab = "Price (USD)")
+```
+
+### Choosing the interval
+
+`interval` controls the time between observations. Valid values are
+`"1min"`, `"5min"`, `"15min"`, `"30min"`, `"45min"`, `"1h"`, `"2h"`,
+`"4h"`, `"1day"`, `"1week"` and `"1month"`.
+
+```{r}
+monthly <- get_time_series("MSFT", interval = "1month", outputsize = 24)
+tail(monthly, 3)
+```
+
+### A fixed period
+
+Use `start_date` and `end_date` (as `"YYYY-MM-DD"` strings or `Date`
+objects) to get a specific period:
+
+```{r}
+jan <- get_time_series("AAPL", interval = "1day",
+                       start_date = "2024-01-01", end_date = "2024-01-31")
+nrow(jan)
+range(jan$datetime)
+```
+
+### Other asset classes
+
+The same function works for currency pairs and cryptocurrencies. Note that
+these have no `volume` column.
+
+```{r}
+eurusd <- get_time_series("EUR/USD", interval = "1day", outputsize = 60)
+head(eurusd, 3)
+```
+
+## A small analysis: daily returns
+
+Because the result is an ordinary data frame, analysis is straightforward.
+Here we compute daily returns and summarise them:
+
+```{r}
+aapl$return <- c(NA, diff(aapl$close) / head(aapl$close, -1))
+
+summary(aapl$return)
+cat("Annualised volatility:",
+    round(sd(aapl$return, na.rm = TRUE) * sqrt(252) * 100, 1), "%\n")
+
+hist(aapl$return, breaks = 30,
+     main = "Distribution of daily returns (AAPL)", xlab = "Daily return")
+```
+
+## The latest quote with `get_quote()`
+
+```{r}
+q <- get_quote("AAPL")
+q[, c("symbol", "name", "close", "change", "percent_change")]
+```
+
+## Error handling
+
+Inputs are checked **before** any request is sent, which saves requests
+from your daily quota:
+
+```{r, error = TRUE, eval = TRUE}
+get_time_series("AAPL", interval = "3days")
+get_time_series("AAPL", outputsize = 10000)
+get_time_series(c("AAPL", "MSFT"))
+```
+
+If the input is valid but the API cannot answer (for example an unknown
+symbol), the error message from Twelve Data is passed on:
+
+```{r, error = TRUE}
+get_time_series("NOTAREALTICKER123")
+```
+
+## Summary
+
+* Store your key in `.Renviron` as `TWELVEDATA_API_KEY`.
+* `get_time_series()` returns historical prices as a sorted data frame.
+* `get_quote()` returns the latest quote as a one-row data frame.
+* Invalid inputs are caught locally; API errors are reported clearly.

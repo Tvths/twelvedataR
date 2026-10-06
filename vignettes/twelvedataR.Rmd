@@ -8,22 +8,22 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-# The examples need an API key and an internet connection.
-# When no key is available (e.g. on CRAN or on a CI run without the
-# secret) the code is shown but not executed, so the vignette still builds.
-has_key <- nzchar(Sys.getenv("TWELVEDATA_API_KEY"))
+# Live examples use API credits, so they run only after explicit opt-in.
+run_live_examples <- nzchar(Sys.getenv("TWELVEDATA_API_KEY")) &&
+  identical(tolower(Sys.getenv("TWELVEDATA_RUN_VIGNETTE_EXAMPLES")), "true")
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = has_key,
+  eval = run_live_examples,
   fig.width = 7,
   fig.height = 4
 )
 ```
 
-```{r, echo = FALSE, results = "asis", eval = !has_key}
-cat("> **Note:** no `TWELVEDATA_API_KEY` was found when this vignette was",
-    "built, so the code below is shown without output.\n")
+```{r, echo = FALSE, results = "asis", eval = !run_live_examples}
+cat("> **Note:** live examples are disabled, so the code below is shown",
+    "without output. Set `TWELVEDATA_RUN_VIGNETTE_EXAMPLES=true` and",
+    "`TWELVEDATA_API_KEY` to run them.\n")
 ```
 
 ## Introduction
@@ -67,10 +67,9 @@ The package reads the key with `Sys.getenv()`, so it is never written in
 your scripts and never ends up on GitHub. If the key is missing, every
 function stops with a message telling you how to fix it.
 
-**Rate limits.** The free plan allows about 8 requests per minute and 800
-per day. Each call to `get_time_series()` or `get_quote()` uses one
-request. If you hit the limit (HTTP 429) the package waits and retries
-automatically up to three times.
+**API usage.** Request limits and credit costs depend on your Twelve Data plan
+and the endpoint. Check your account before making repeated requests. The
+package retries rate-limit and transient HTTP responses up to three times.
 
 ```{r setup, eval = TRUE}
 library(twelvedataR)

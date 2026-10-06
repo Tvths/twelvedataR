@@ -22,8 +22,8 @@ get_time_series(
 \code{"1month"}.}
 
 \item{outputsize}{Number of observations to return, between 1 and 5000.
-Ignored by the API when both \code{start_date} and \code{end_date}
-are given.}
+When both \code{start_date} and \code{end_date} are supplied, this
+value is not sent; the API's per-request maximum still applies.}
 
 \item{start_date, end_date}{Optional dates (\code{"YYYY-MM-DD"} strings or
 \code{Date} objects) limiting the period.}

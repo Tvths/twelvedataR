@@ -14,8 +14,8 @@
 #'   \code{"1h"}, \code{"2h"}, \code{"4h"}, \code{"1day"}, \code{"1week"},
 #'   \code{"1month"}.
 #' @param outputsize Number of observations to return, between 1 and 5000.
-#'   Ignored by the API when both \code{start_date} and \code{end_date}
-#'   are given.
+#'   When both \code{start_date} and \code{end_date} are supplied, this
+#'   value is not sent; the API's per-request maximum still applies.
 #' @param start_date,end_date Optional dates (\code{"YYYY-MM-DD"} strings or
 #'   \code{Date} objects) limiting the period.
 #'
@@ -47,26 +47,31 @@ get_time_series <- function(symbol,
          paste(valid_intervals, collapse = ", "), call. = FALSE)
   }
 
-  if (!is.numeric(outputsize) || length(outputsize) != 1 ||
-      is.na(outputsize) || outputsize < 1 || outputsize > 5000 ||
-      outputsize != round(outputsize)) {
-    stop("`outputsize` must be a whole number between 1 and 5000.",
-         call. = FALSE)
-  }
+  has_complete_date_range <- !is.null(start_date) && !is.null(end_date)
+  if (!has_complete_date_range) outputsize <- check_outputsize(outputsize)
 
-  params <- list(symbol = symbol,
-                 interval = interval,
-                 outputsize = as.integer(outputsize),
-                 timezone = "UTC")
-  if (!is.null(start_date)) params$start_date <- check_date(start_date, "start_date")
-  if (!is.null(end_date))   params$end_date   <- check_date(end_date, "end_date")
+  if (!is.null(start_date)) start_date <- check_date(start_date, "start_date")
+  if (!is.null(end_date))   end_date <- check_date(end_date, "end_date")
   if (!is.null(start_date) && !is.null(end_date) &&
-      as.Date(params$start_date) > as.Date(params$end_date)) {
+      as.Date(start_date) > as.Date(end_date)) {
     stop("`start_date` must be before `end_date`.", call. = FALSE)
   }
 
+  params <- make_time_series_params(symbol, interval, outputsize,
+                                    start_date, end_date)
   body <- td_request("time_series", params)
   parse_time_series(body$values)
+}
+
+# Internal: assemble query parameters, omitting outputsize for a full date range.
+make_time_series_params <- function(symbol, interval, outputsize,
+                                    start_date = NULL, end_date = NULL) {
+  params <- list(symbol = symbol, interval = interval, timezone = "UTC")
+  has_complete_date_range <- !is.null(start_date) && !is.null(end_date)
+  if (!has_complete_date_range) params$outputsize <- outputsize
+  if (!is.null(start_date)) params$start_date <- start_date
+  if (!is.null(end_date)) params$end_date <- end_date
+  params
 }
 
 # Internal: turn the "values" part of the JSON into a clean data.frame

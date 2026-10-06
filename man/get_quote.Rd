@@ -16,8 +16,8 @@ A one-row \code{data.frame} with columns \code{symbol},
 \code{previous_close}, \code{change} and \code{percent_change}.
 }
 \description{
-Retrieves the most recent quote (latest price, daily change, 52-week
-range etc.) from the Twelve Data \code{/quote} endpoint.
+Retrieves the most recent quote and available instrument metadata from the
+Twelve Data \code{/quote} endpoint.
 }
 \examples{
 \dontrun{

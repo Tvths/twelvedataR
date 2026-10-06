@@ -1,18 +1,20 @@
 Package: twelvedataR
-Title: What the Package Does (One Line, Title Case)
+Title: Access Twelve Data Financial Market Data from R
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    c(person("Viet Tien", "Trinh", , "vietr933@student.liu.se", role = c("aut", "cre")),
+      person("Zhengyu", "Wang", , "zhewa470@student.liu.se", role = "aut"))
+Description: Provides a small client for the Twelve Data REST API. Retrieve
+    historical OHLCV price series and the latest quote as base R data frames,
+    with input validation and clear API error messages.
 License: MIT + file LICENSE
 Config/roxygen2/version: 8.1.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-URL: https://github.com/Tvths/twelvedataR
+URL: https://github.com/Tvths/twelvedataR, https://twelvedata.com/docs
 BugReports: https://github.com/Tvths/twelvedataR/issues
 Imports: 
-    httr2,
-    jsonlite
+    httr2
 Suggests: 
     knitr,
     rmarkdown,

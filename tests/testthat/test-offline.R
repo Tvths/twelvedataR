@@ -31,8 +31,21 @@ test_that("get_time_series validates outputsize (API limits 1-5000)", {
 
 test_that("get_time_series validates dates", {
   expect_error(get_time_series("AAPL", start_date = "not a date"), "start_date")
+  expect_error(get_time_series("AAPL", start_date = "2024-02-31"), "start_date")
   expect_error(get_time_series("AAPL", start_date = "2024-05-01",
                                end_date = "2024-01-01"), "before")
+})
+
+test_that("date-range requests omit outputsize", {
+  params <- make_time_series_params(
+    "AAPL", "1day", 30, "2024-01-01", "2024-03-31"
+  )
+  expect_equal(params$start_date, "2024-01-01")
+  expect_equal(params$end_date, "2024-03-31")
+  expect_false("outputsize" %in% names(params))
+
+  recent <- make_time_series_params("AAPL", "1day", 10)
+  expect_equal(recent$outputsize, 10L)
 })
 
 test_that("get_quote validates symbol", {
@@ -63,4 +76,18 @@ test_that("parse_time_series handles intraday timestamps", {
 
 test_that("parse_time_series fails on empty data", {
   expect_error(parse_time_series(NULL), "no data")
+})
+
+test_that("parse_quote returns one row with numeric prices", {
+  quote <- parse_quote(list(
+    symbol = "AAPL", name = "Apple Inc.", exchange = "NASDAQ",
+    currency = "USD", datetime = "2026-10-05 20:00:00",
+    open = "100.1", high = "102.2", low = "99.9", close = "101.5",
+    previous_close = "100.5", change = "1.0", percent_change = "1.0"
+  ))
+  expect_s3_class(quote, "data.frame")
+  expect_equal(nrow(quote), 1L)
+  expect_equal(quote$symbol, "AAPL")
+  expect_type(quote$close, "double")
+  expect_equal(quote$close, 101.5)
 })

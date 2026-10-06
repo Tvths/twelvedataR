@@ -1,7 +1,7 @@
 #' Get the latest quote for a symbol
 #'
-#' Retrieves the most recent quote (latest price, daily change, 52-week
-#' range etc.) from the Twelve Data \code{/quote} endpoint.
+#' Retrieves the most recent quote and available instrument metadata from the
+#' Twelve Data \code{/quote} endpoint.
 #'
 #' @param symbol A single character string, e.g. \code{"AAPL"}.
 #'
@@ -18,7 +18,11 @@
 get_quote <- function(symbol) {
   check_symbol(symbol)
   body <- td_request("quote", list(symbol = symbol))
+  parse_quote(body)
+}
 
+# Internal: convert the quote response into one row with numeric price fields.
+parse_quote <- function(body) {
   get_field <- function(x) if (is.null(body[[x]])) NA else body[[x]]
 
   out <- data.frame(

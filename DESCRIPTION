@@ -10,3 +10,9 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 URL: https://github.com/Tvths/twelvedataR
 BugReports: https://github.com/Tvths/twelvedataR/issues
+Imports: 
+    httr2,
+    jsonlite
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

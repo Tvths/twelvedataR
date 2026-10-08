@@ -85,15 +85,19 @@ Optional live API tests are skipped by default. To enable them, set
 `TWELVEDATA_API_TESTS=true` and `TWELVEDATA_API_KEY` in your environment before
 running the tests. These requests use your Twelve Data API allowance.
 
+The latest R-CMD-check run on 2026-10-06 completed all five CI jobs
+successfully. Its GitHub-hosted runner notices concerned the upcoming
+`ubuntu-latest` image migration and macOS runner capacity; these are
+infrastructure advisories, and all package-check jobs passed.
+
 ## Shiny application
 
-The lab's Shiny application is prepared as the separate local project
-`../twelvedataR-shiny/`. Publish that project in its own GitHub repository
-named `Tvths/twelvedataR-shiny`; after it is published and this package is
-installed, it can be launched with:
+The Shiny application is published in the separate GitHub repository
+`Tvths/Twelvedata_shiny`. After installing this package and setting the API
+key above, launch it with:
 
 ```r
-shiny::runGitHub("twelvedataR-shiny", "Tvths")
+shiny::runGitHub("Twelvedata_shiny", "Tvths")
 ```
 
 ## Authors

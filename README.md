@@ -85,7 +85,7 @@ Optional live API tests are skipped by default. To enable them, set
 `TWELVEDATA_API_TESTS=true` and `TWELVEDATA_API_KEY` in your environment before
 running the tests. These requests use your Twelve Data API allowance.
 
-The latest R-CMD-check run on 2026-10-08 (commit `1777ebf`) completed
+The R-CMD-check run for package-code commit `1777ebf` on 2026-10-08 completed
 all five CI jobs successfully. Its GitHub-hosted runner notices concerned
 the upcoming `ubuntu-latest` image migration and macOS runner capacity;
 these are infrastructure advisories, and all package-check jobs passed.
